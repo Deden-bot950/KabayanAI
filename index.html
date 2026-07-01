@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="su">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kabayan AI — Rerencangan Basa Sunda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --cream:#F6F1E4;
+    --forest:#2F4538;
+    --forest-light:#3E5A48;
+    --clay:#B8542A;
+    --bamboo:#D9C589;
+    --ink:#1B1B18;
+    --gold:#C9A227;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; margin:0;}
+  body{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .app{ display:flex; flex-direction:column; height:100dvh; max-width:520px; margin:0 auto; width:100%; background:var(--cream); position:relative;}
+
+  /* Header */
+  header{
+    background:var(--forest);
+    color:var(--cream);
+    padding:16px 18px 14px;
+    position:relative;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  header::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(217,197,137,0.07) 0px, rgba(217,197,137,0.07) 2px, transparent 2px, transparent 14px),
+      repeating-linear-gradient(-45deg, rgba(217,197,137,0.07) 0px, rgba(217,197,137,0.07) 2px, transparent 2px, transparent 14px);
+    pointer-events:none;
+  }
+  .header-row{display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:700; color:var(--ink); font-size:18px;
+  }
+  .brand-text h1{font-family:'Fraunces', serif; font-size:19px; font-weight:600; margin:0; letter-spacing:0.2px;}
+  .brand-text p{margin:0; font-size:11px; opacity:0.75; font-family:'JetBrains Mono', monospace;}
+  .icon-btn{
+    background:rgba(246,241,228,0.12); border:none; color:var(--cream);
+    width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px;
+  }
+  .icon-btn:active{background:rgba(246,241,228,0.22);}
+
+  /* Register toggle */
+  .register-toggle{
+    display:flex; gap:6px; margin-top:12px; position:relative; z-index:1;
+  }
+  .reg-pill{
+    flex:1; text-align:center; padding:7px 4px; border-radius:20px; font-size:12px; font-weight:600;
+    background:rgba(246,241,228,0.1); color:var(--cream); border:1px solid rgba(246,241,228,0.2);
+    cursor:pointer;
+  }
+  .reg-pill.active{background:var(--gold); color:var(--ink); border-color:var(--gold);}
+
+  /* Mode tabs */
+  .mode-tabs{
+    display:flex; gap:8px; padding:12px 16px 0;
+    flex-shrink:0;
+  }
+  .tab{
+    flex:1; padding:9px 6px; text-align:center; font-size:12.5px; font-weight:600;
+    border-radius:12px; background:transparent; color:var(--forest); border:1.5px solid var(--forest);
+    cursor:pointer; opacity:0.55;
+  }
+  .tab.active{background:var(--forest); color:var(--cream); opacity:1;}
+
+  /* Chat area */
+  .chat-area{
+    flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;
+  }
+  .empty-state{
+    margin:auto; text-align:center; color:var(--forest); opacity:0.6; padding:0 24px;
+  }
+  .empty-state .glyph{font-size:34px; margin-bottom:8px;}
+  .empty-state p{font-size:13px; line-height:1.5; margin:0;}
+
+  .bubble-row{display:flex; gap:8px; max-width:88%;}
+  .bubble-row.user{align-self:flex-end; flex-direction:row-reverse;}
+  .bubble-row.ai{align-self:flex-start;}
+  .avatar{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center; font-size:13px;
+  }
+  .avatar.ai{background:var(--gold); color:var(--ink);}
+  .avatar.user{background:var(--forest); color:var(--cream);}
+  .bubble{
+    padding:10px 14px; border-radius:var(--radius); font-size:14.5px; line-height:1.5;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .bubble.ai{background:#fff; color:var(--ink); border-bottom-left-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.06);}
+  .bubble.user{background:var(--clay); color:#fff; border-bottom-right-radius:4px;}
+  .bubble img{max-width:100%; border-radius:10px; margin-top:6px; display:block;}
+  .bubble .timestamp{display:block; font-family:'JetBrains Mono', monospace; font-size:9.5px; opacity:0.5; margin-top:4px;}
+
+  .typing{display:flex; gap:4px; padding:6px 2px;}
+  .typing span{width:6px; height:6px; border-radius:50%; background:var(--forest); opacity:0.4; animation:bounce 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:0.15s;}
+  .typing span:nth-child(3){animation-delay:0.3s;}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0); opacity:0.3;} 30%{transform:translateY(-4px); opacity:0.8;}}
+
+  /* Input bar */
+  .input-bar{
+    flex-shrink:0; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:var(--cream); border-top:1px solid rgba(47,69,56,0.12);
+    display:flex; align-items:flex-end; gap:8px;
+  }
+  .attach-btn{
+    width:38px; height:38px; border-radius:12px; border:1.5px solid var(--forest);
+    background:transparent; color:var(--forest); font-size:16px; flex-shrink:0; cursor:pointer;
+  }
+  .attach-btn.recording{background:var(--clay); border-color:var(--clay); color:#fff; animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.6;}}
+  .input-wrap{
+    flex:1; background:#fff; border-radius:20px; border:1.5px solid rgba(47,69,56,0.15);
+    display:flex; align-items:center; padding:2px 4px 2px 14px;
+  }
+  textarea#msgInput{
+    flex:1; border:none; outline:none; resize:none; background:transparent;
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:14.5px; padding:9px 0; max-height:90px; color:var(--ink);
+  }
+  .send-btn{
+    width:34px; height:34px; border-radius:50%; background:var(--forest); color:var(--cream);
+    border:none; flex-shrink:0; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center;
+  }
+  .send-btn:disabled{opacity:0.4;}
+
+  /* Drawer / settings */
+  .drawer-overlay{
+    position:absolute; inset:0; background:rgba(27,27,24,0.45); z-index:20;
+    display:none;
+  }
+  .drawer-overlay.open{display:block;}
+  .drawer{
+    position:absolute; top:0; right:0; bottom:0; width:78%; max-width:300px;
+    background:var(--cream); z-index:21; padding:20px 18px;
+    transform:translateX(100%); transition:transform 0.25s ease;
+    overflow-y:auto;
+  }
+  .drawer.open{transform:translateX(0);}
+  .drawer h2{font-family:'Fraunces', serif; font-size:17px; margin:0 0 14px; color:var(--forest);}
+  .drawer-item{
+    padding:12px 0; border-bottom:1px solid rgba(47,69,56,0.12); font-size:13.5px; color:var(--ink);
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+  }
+  .drawer-item small{display:block; opacity:0.6; font-size:11.5px; margin-top:2px;}
+  .danger{color:var(--clay); font-weight:600;}
+
+  input#fileInput{display:none;}
+  .toast{
+    position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--cream); padding:8px 16px; border-radius:20px;
+    font-size:12.5px; z-index:30; opacity:0; transition:opacity 0.25s ease; pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-mark">🌾</div>
+        <div class="brand-text">
+          <h1>Kabayan AI</h1>
+          <p>rerencangan basa Sunda</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="menuBtn">☰</button>
+    </div>
+    <div class="register-toggle">
+      <div class="reg-pill active" data-reg="lemes">Lemes</div>
+      <div class="reg-pill" data-reg="sedeng">Sedeng</div>
+      <div class="reg-pill" data-reg="kasar">Kasar</div>
+    </div>
+  </header>
+
+  <div class="mode-tabs">
+    <button class="tab active" data-mode="chat">💬 Ngobrol</button>
+    <button class="tab" data-mode="image">🎨 Gambar</button>
+    <button class="tab" data-mode="doc">📄 Dokumén</button>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="empty-state" id="emptyState">
+      <div class="glyph">🎋</div>
+      <p>Wilujeng sumping! Mangga ngobrol ku basa Sunda, nyieun gambar, atawa unggah dokumén pikeun diringkeskeun.</p>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <input type="file" id="fileInput" accept="application/pdf,.txt">
+    <button class="attach-btn" id="attachBtn" title="Rékam sora / unggah dokumén">🎙️</button>
+    <div class="input-wrap">
+      <textarea id="msgInput" rows="1" placeholder="Tulis di dieu..."></textarea>
+    </div>
+    <button class="send-btn" id="sendBtn">➤</button>
+  </div>
+
+  <div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer" id="drawer">
+      <h2>Setélan</h2>
+      <div class="drawer-item" id="clearHistory">
+        <span>Beresihan riwayat ngobrol<small>Ngahapus sadaya pesen anu kasimpen</small></span>
+        <span class="danger">🗑️</span>
+      </div>
+      <div class="drawer-item">
+        <span>Basa antarmuka<small>Sunda (baku)</small></span>
+        <span>🇮🇩</span>
+      </div>
+      <div class="drawer-item">
+        <span>Ngeunaan Kabayan AI<small>v1.0 — dijieun ku Vision Home Decor Lab</small></span>
+        <span>ℹ️</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const API_BASE = ''; // isi ku URL Netlify Function upami dipisahkeun domain, contona 'https://kabayan-ai.netlify.app'
+const CHAT_ENDPOINT = API_BASE + '/.netlify/functions/chat';
+const IMAGE_ENDPOINT = API_BASE + '/.netlify/functions/image';
+
+let mode = 'chat';
+let register = 'lemes';
+let history = JSON.parse(localStorage.getItem('kabayan_history') || '[]');
+let isRecording = false;
+let recognition = null;
+
+const chatArea = document.getElementById('chatArea');
+const emptyState = document.getElementById('emptyState');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+const attachBtn = document.getElementById('attachBtn');
+const fileInput = document.getElementById('fileInput');
+const toast = document.getElementById('toast');
+
+function showToast(text){
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 2200);
+}
+
+// ---------- Render ----------
+function renderAll(){
+  chatArea.querySelectorAll('.bubble-row').forEach(el=>el.remove());
+  if(history.length === 0){ emptyState.style.display='block'; }
+  else{ emptyState.style.display='none'; }
+  history.forEach(m => appendBubble(m, false));
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function appendBubble(msg, scroll=true){
+  emptyState.style.display='none';
+  const row = document.createElement('div');
+  row.className = 'bubble-row ' + msg.role;
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + msg.role;
+  avatar.textContent = msg.role === 'ai' ? '🌾' : '🙂';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + msg.role;
+  if(msg.image){
+    const img = document.createElement('img');
+    img.src = msg.image;
+    bubble.appendChild(document.createTextNode(msg.text || ''));
+    bubble.appendChild(img);
+  } else {
+    bubble.textContent = msg.text;
+  }
+  const ts = document.createElement('span');
+  ts.className = 'timestamp';
+  ts.textContent = new Date(msg.time || Date.now()).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  bubble.appendChild(ts);
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  chatArea.appendChild(row);
+  if(scroll) chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping(){
+  const row = document.createElement('div');
+  row.className = 'bubble-row ai';
+  row.id = 'typingRow';
+  row.innerHTML = '<div class="avatar ai">🌾</div><div class="bubble ai"><div class="typing"><span></span><span></span><span></span></div></div>';
+  chatArea.appendChild(row);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+function hideTyping(){
+  const el = document.getElementById('typingRow');
+  if(el) el.remove();
+}
+
+function saveHistory(){
+  localStorage.setItem('kabayan_history', JSON.stringify(history.slice(-100)));
+}
+
+function pushMessage(role, text, image){
+  const m = {role, text, image, time: Date.now()};
+  history.push(m);
+  appendBubble(m);
+  saveHistory();
+}
+
+// ---------- System prompt ----------
+function buildSystemPrompt(){
+  const regMap = {
+    lemes: 'Basa Sunda lemes (halus, sopan, cocog kanggo ka nu leuwih kolot atawa formal).',
+    sedeng: 'Basa Sunda sedeng (sedang, biasa dipake sapopoe, teu resmi teuing).',
+    kasar: 'Basa Sunda kasar/loma (santai, akrab, kawas ngobrol jeung babaturan deukeut).'
+  };
+  return `Anjeun nyaéta Kabayan AI, asisten AI anu ngobrol dina Basa Sunda. ` +
+    `Waleran anjeun kudu dina ${regMap[register]} ` +
+    `Lamun aya istilah teknis anu teu aya dina Basa Sunda, campur ku Basa Indonesia sacukupna sangkan tetep jelas. ` +
+    `Jawab singket, jelas, jeung ramah. Upami dipenta narjamahkeun atawa ngajelaskeun paribasa/babasan Sunda, jieun conto anu bener.`;
+}
+
+// ---------- Chat send ----------
+async function sendChat(text){
+  pushMessage('user', text);
+  msgInput.value = '';
+  autoGrow();
+  showTyping();
+  try{
+    const res = await fetch(CHAT_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system: buildSystemPrompt(),
+        messages: history.slice(-12).map(m=>({role: m.role==='ai'?'assistant':'user', content:m.text})),
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+    if(data.reply){ pushMessage('ai', data.reply); }
+    else{ pushMessage('ai', 'Punten, aya kasalahan waktu nyambung ka server. Coba deui nya.'); }
+  }catch(e){
+    hideTyping();
+    pushMessage('ai', 'Punten, teu tiasa nyambung ka server ayeuna. Pariksa deui koneksi internet.');
+  }
+}
+
+// ---------- Image generation ----------
+async function sendImagePrompt(text){
+  pushMessage('user', text);
+  msgInput.value = '';
+  autoGrow();
+  showTyping();
+  try{
+    const res = await fetch(IMAGE_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt: text })
+    });
+    const data = await res.json();
+    hideTyping();
+    if(data.imageUrl){ pushMessage('ai', 'Ieu gambarna:', data.imageUrl); }
+    else{ pushMessage('ai', 'Punten, gagal nyieun gambar. Coba deui prompt-na.'); }
+  }catch(e){
+    hideTyping();
+    pushMessage('ai', 'Punten, aya kasalahan waktu nyieun gambar.');
+  }
+}
+
+// ---------- Document summarize ----------
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let full = '';
+  for(let i=1; i<=Math.min(pdf.numPages, 15); i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    full += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return full.slice(0, 12000);
+}
+
+async function handleDocFile(file){
+  pushMessage('user', `📄 Unggah dokumén: ${file.name}`);
+  showTyping();
+  try{
+    let text = '';
+    if(file.type === 'application/pdf'){ text = await extractPdfText(file); }
+    else { text = await file.text(); }
+    const res = await fetch(CHAT_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system: buildSystemPrompt(),
+        messages: [{role:'user', content:`Ringkeskeun eusi dokumén ieu dina Basa Sunda, poin-poin utamana wae:\n\n${text}`}]
+      })
+    });
+    const data = await res.json();
+    hideTyping();
+    pushMessage('ai', data.reply || 'Punten, gagal ngaringkeskeun dokumén.');
+  }catch(e){
+    hideTyping();
+    pushMessage('ai', 'Punten, gagal maca eusi dokumén ieu.');
+  }
+}
+
+// ---------- Voice input ----------
+function setupRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = 'id-ID';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+function toggleRecording(){
+  if(mode === 'doc'){ fileInput.click(); return; }
+  if(!recognition) recognition = setupRecognition();
+  if(!recognition){ showToast('Alat ieu teu ngarojong input sora'); return; }
+  if(isRecording){ recognition.stop(); return; }
+  isRecording = true;
+  attachBtn.classList.add('recording');
+  attachBtn.textContent = '⏹️';
+  recognition.start();
+  recognition.onresult = (e)=>{
+    const t = e.results[0][0].transcript;
+    msgInput.value = t;
+    autoGrow();
+  };
+  recognition.onend = ()=>{
+    isRecording = false;
+    attachBtn.classList.remove('recording');
+    attachBtn.textContent = '🎙️';
+  };
+  recognition.onerror = ()=>{
+    isRecording = false;
+    attachBtn.classList.remove('recording');
+    attachBtn.textContent = '🎙️';
+    showToast('Gagal ngarékam sora');
+  };
+}
+
+// ---------- Input handling ----------
+function autoGrow(){
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 90) + 'px';
+}
+msgInput.addEventListener('input', autoGrow);
+msgInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+});
+
+function handleSend(){
+  const text = msgInput.value.trim();
+  if(!text) return;
+  if(mode === 'image') sendImagePrompt(text);
+  else sendChat(text);
+}
+sendBtn.addEventListener('click', handleSend);
+attachBtn.addEventListener('click', toggleRecording);
+fileInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(f) handleDocFile(f);
+  fileInput.value = '';
+});
+
+// ---------- Tabs & toggles ----------
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    mode = tab.dataset.mode;
+    const placeholders = {
+      chat: 'Tulis di dieu...',
+      image: 'Jelaskeun gambar anu dipikahayang...',
+      doc: 'Pencét ikon 🎙️ pikeun unggah dokumén'
+    };
+    msgInput.placeholder = placeholders[mode];
+    attachBtn.textContent = mode === 'doc' ? '📎' : '🎙️';
+  });
+});
+document.querySelectorAll('.reg-pill').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    document.querySelectorAll('.reg-pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    register = p.dataset.reg;
+  });
+});
+
+// ---------- Drawer ----------
+const drawerOverlay = document.getElementById('drawerOverlay');
+const drawer = document.getElementById('drawer');
+document.getElementById('menuBtn').addEventListener('click', ()=>{
+  drawerOverlay.classList.add('open');
+  drawer.classList.add('open');
+});
+drawerOverlay.addEventListener('click', (e)=>{
+  if(e.target === drawerOverlay){
+    drawerOverlay.classList.remove('open');
+    drawer.classList.remove('open');
+  }
+});
+document.getElementById('clearHistory').addEventListener('click', ()=>{
+  history = [];
+  saveHistory();
+  renderAll();
+  drawerOverlay.classList.remove('open');
+  drawer.classList.remove('open');
+  showToast('Riwayat parantos dibersihan');
+});
+
+// ---------- Init ----------
+renderAll();
+</script>
+</body>
+</html>
